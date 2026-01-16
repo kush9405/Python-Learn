@@ -1,0 +1,5 @@
+import hashlib
+
+secret = "c0d6399809b7313b715VAYIIP5NS1VBJTHBY549LZTQDQNP5GA2VC4EWTKFV2V1AHC752fa99463461f008a79e2a85bb78527752b0c433d7062afef094b2430529f3df6dd1f5f4c8cd47820acd99605421b3047ad7ec1622a836c"
+hashed_secret = hashlib.sha512(secret.encode("utf-8")).hexdigest()
+print(hashed_secret)
