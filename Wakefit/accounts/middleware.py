@@ -1,36 +1,47 @@
 import uuid
 import logging
 import time
+import threading
 
-# Get a logger instance
-logger = logging.getLogger(__name__)
+# Create a thread-local storage object
+_thread_locals = threading.local()
+
+class RequestIDFilter(logging.Filter):
+    """
+    This filter pulls the request_id from thread-local storage 
+    and adds it to the log record so the formatter can see it.
+    """
+    def filter(self, record):
+        # Fallback to 'N/A' if no ID is found (e.g., for background tasks)
+        record.request_id = getattr(_thread_locals, 'request_id', 'N/A')
+        return True
 
 class RequestLogMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response
 
     def __call__(self, request):
-        # 1. Generate a unique ID for this specific request
+        # 1. Generate the ID
         request_id = str(uuid.uuid4())
-        request.request_id = request_id  # Attach it to the request object
+        
+        # 2. Store it in thread-locals so the filter can find it
+        _thread_locals.request_id = request_id
+        request.request_id = request_id 
 
-        # 2. Start timer for performance logging
         start_time = time.time()
+        
+        # Now this logger.info will NOT crash
+        logger = logging.getLogger(__name__)
+        logger.info(f"REQUEST START: Path={request.path} Method={request.method}")
 
-        # 3. Log the incoming request (PRD Section 6)
-        logger.info(f"REQUEST START: ID={request_id} | Path={request.path} | Method={request.method}")
-
-        # --- CODE GOES TO THE VIEW HERE ---
         response = self.get_response(request)
-        # --- CODE RETURNS FROM THE VIEW HERE ---
 
-        # 4. Calculate duration
         duration = time.time() - start_time
-
-        # 5. Attach ID to Response Header (PRD Section 6)
         response['X-Request-ID'] = request_id
+        
+        logger.info(f"REQUEST END: Status={response.status_code} Duration={duration:.2f}s")
 
-        # 6. Log the response details
-        logger.info(f"REQUEST END: ID={request_id} | Status={response.status_code} | Duration={duration:.2f}s")
-
+        # 3. Clean up after the request is done
+        _thread_locals.request_id = 'N/A'
+        
         return response

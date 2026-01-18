@@ -34,3 +34,27 @@ class OrderCreateSerializer(serializers.Serializer):
             raise serializers.ValidationError("You must provide at least one product.")
         
         return data
+    
+
+# orders/serializers.py
+from products.serializers import ProductMinimalSerializer  # Import the new one
+from rest_framework import serializers
+
+from .models import Order, OrderItem
+
+
+class OrderItemReadSerializer(serializers.ModelSerializer):
+    # Use the Minimal Serializer here
+    product = ProductMinimalSerializer(read_only=True)
+
+    class Meta:
+        model = OrderItem
+        # 'price' here is the price-at-purchase, 'quantity' is how many they bought.
+        fields = ['product', 'quantity', 'price']
+
+class OrderHistorySerializer(serializers.ModelSerializer):
+    items = OrderItemReadSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Order
+        fields = ['order_id', 'total_amount', 'status', 'address', 'created_at', 'items']

@@ -1,0 +1,2 @@
+INFO 2026-01-18 11:25:32,036 [ReqID: fd988a27-c7fc-41b3-9131-3c645cfccca9] payments.services PAYMENT_INIT: Calling UroPay for Order 4f82ef08-2351-4302-a415-74a7d1cfc82c
+INFO 2026-01-18 11:25:32,685 [ReqID: fd988a27-c7fc-41b3-9131-3c645cfccca9] payments.services PAYMENT_GATEWAY_RESPONSE: Received URL for Transaction 4f82ef08-2351-4302-a415-74a7d1cfc82c

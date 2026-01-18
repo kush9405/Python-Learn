@@ -1,4 +1,4 @@
-from asyncio.log import logger
+from asyncio.log import logger as async_logger
 from dataclasses import dataclass
 from typing import List
 
@@ -8,6 +8,9 @@ from payments.services import initiate_uropay_order
 from products.models import Product
 
 from .models import Order, OrderItem
+
+import logging
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -23,6 +26,7 @@ def create_order_service(user, items: List[OrderItemDTO], address:str) -> Order:
         order = Order.objects.create(user=user, status='pending',address=address)
         total_price = 0
 
+        logger.info(f"ORDER_PLACEMENT: User {user.id} placing order for {len(items)} items")
         for item in items:
             # We use .get() which might throw a Product.DoesNotExist error
             try:
@@ -52,6 +56,8 @@ def create_order_service(user, items: List[OrderItemDTO], address:str) -> Order:
         order.total_amount = total_price
         order.save()
     # Return the order only after the transaction is successfully committed
+    logger.info(f"ORDER_SUCCESS: Order {order.order_id} created successfully")
+
     return order
 
 
@@ -76,7 +82,7 @@ def checkout_orchestrator(data: CheckoutData):
         send_order_confirmation_task.delay(order.id)
     except Exception as e:
         # Log failure but return the order (Per your requirement)
-        logger.error(f"Payment failed for order {order.id}: {e}")
+        async_logger.error(f"Payment failed for order {order.id}: {e}")
         payment_response = None
 
     return order, payment_response

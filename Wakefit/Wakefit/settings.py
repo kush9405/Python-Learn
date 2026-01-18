@@ -10,8 +10,9 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
-from pathlib import Path
 import os
+from pathlib import Path
+
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -172,19 +173,6 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
-        },
-    },
-    'root': {
-        'handlers': ['console'],
-        'level': 'INFO',
-    },
-}
 
 UROPAY_API_KEY = config('UROPAY_API_KEY')
 UROPAY_SECRET = config('UROPAY_SECRET')
@@ -198,3 +186,94 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = config('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
+
+
+LOG_DIR = os.path.join(BASE_DIR, 'logs')
+if not os.path.exists(LOG_DIR):
+    os.makedirs(LOG_DIR)
+
+# settings.py
+
+# Ensure LOG_DIR is set correctly at the top of your settings
+LOG_DIR = BASE_DIR / 'logs'
+LOG_DIR.mkdir(parents=True, exist_ok=True)
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    
+    # 1. Filters: Ensure your RequestIDFilter is reachable
+    'filters': {
+        'request_id_filter': {
+            '()': 'accounts.middleware.RequestIDFilter',
+        },
+    },
+
+    # 2. Formatters
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} [ReqID: {request_id}] {name} {message}',
+            'style': '{',
+        },
+    },
+
+    # 3. Handlers: The 'names' here must match the ones in 'loggers'
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+            'filters': ['request_id_filter'],
+        },
+        'auth_file': { # <--- THIS NAME MUST MATCH
+            'level': 'INFO',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': str(LOG_DIR / 'auth.log'),
+            'maxBytes': 1024 * 1024 * 5,
+            'backupCount': 5,
+            'formatter': 'verbose',
+            'filters': ['request_id_filter'],
+        },
+        'orders_file': {
+            'level': 'INFO',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': str(LOG_DIR / 'orders.log'),
+            'maxBytes': 1024 * 1024 * 5,
+            'backupCount': 5,
+            'formatter': 'verbose',
+            'filters': ['request_id_filter'],
+        },
+        'payments_file': {
+            'level': 'INFO',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': str(LOG_DIR / 'payments.log'),
+            'maxBytes': 1024 * 1024 * 5,
+            'backupCount': 5,
+            'formatter': 'verbose',
+            'filters': ['request_id_filter'],
+        },
+    },
+
+    # 4. Loggers: Map names to handlers
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'accounts': {
+            'handlers': ['console', 'auth_file'], # Refers to the handler above
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'orders': {
+            'handlers': ['console', 'orders_file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'payments': {
+            'handlers': ['console', 'payments_file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    },
+}

@@ -5,12 +5,11 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .serializers import OrderCreateSerializer, OrderItemSerializer
+from .models import Order
+from .serializers import (OrderCreateSerializer, OrderHistorySerializer,OrderItemSerializer)
 from .services import CheckoutData, OrderItemDTO, checkout_orchestrator
 
 
-# orders/views.py
-# orders/views.py
 class PlaceOrderView(generics.GenericAPIView):
     serializer_class = OrderCreateSerializer
     permission_classes = [IsAuthenticated]
@@ -32,7 +31,7 @@ class PlaceOrderView(generics.GenericAPIView):
             items=items_dtos,
             address=vd['address']
         )
-        
+
         order, payment_data = checkout_orchestrator(checkout_data)
 
         return Response({
@@ -40,3 +39,18 @@ class PlaceOrderView(generics.GenericAPIView):
             "payment": payment_data,
             "message": "Order Placed! Check your email for confirmation."
         }, status=201)
+
+
+
+
+class OrderHistoryAPIView(generics.ListAPIView):
+    """
+    PRD Section 4 & 7: Only authenticated users can see their own data.
+    """
+    serializer_class = OrderHistorySerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        # Crucial Security Move: Filter orders by the logged-in user
+        # We also use 'prefetch_related' to speed up the query (Optimized ORM)
+        return Order.objects.filter(user=self.request.user).prefetch_related('items__product').order_by('-created_at')
