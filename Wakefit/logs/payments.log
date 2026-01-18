@@ -1,2 +1,6 @@
 INFO 2026-01-18 11:25:32,036 [ReqID: fd988a27-c7fc-41b3-9131-3c645cfccca9] payments.services PAYMENT_INIT: Calling UroPay for Order 4f82ef08-2351-4302-a415-74a7d1cfc82c
 INFO 2026-01-18 11:25:32,685 [ReqID: fd988a27-c7fc-41b3-9131-3c645cfccca9] payments.services PAYMENT_GATEWAY_RESPONSE: Received URL for Transaction 4f82ef08-2351-4302-a415-74a7d1cfc82c
+INFO 2026-01-18 11:40:15,855 [ReqID: N/A] payments.services PAYMENT_INIT: Calling UroPay for Order dcc4dfba-c3ea-4fbb-aef5-db5d7a0b00cd
+INFO 2026-01-18 11:40:15,856 [ReqID: N/A] payments.services PAYMENT_GATEWAY_RESPONSE: Received URL for Transaction dcc4dfba-c3ea-4fbb-aef5-db5d7a0b00cd
+INFO 2026-01-18 12:25:15,860 [ReqID: 0ed63324-40d6-4126-a539-88876e2af94a] payments.services PAYMENT_INIT: Calling UroPay for Order 95394df9-bcc4-4e9c-9120-f76ca46db6f1
+INFO 2026-01-18 12:25:15,860 [ReqID: 0ed63324-40d6-4126-a539-88876e2af94a] payments.services PAYMENT_GATEWAY_RESPONSE: Received URL for Transaction 95394df9-bcc4-4e9c-9120-f76ca46db6f1

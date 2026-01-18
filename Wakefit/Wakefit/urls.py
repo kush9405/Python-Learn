@@ -1,3 +1,4 @@
+#type:ignore
 """
 URL configuration for Wakefit project.
 
@@ -14,6 +15,7 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+
 from accounts.views import RegisterView
 from django.contrib import admin
 from django.urls import include, path
@@ -21,16 +23,22 @@ from orders import views
 from rest_framework_simplejwt.views import (TokenObtainPairView,
                                             TokenRefreshView)
 
+
 urlpatterns = [
-    path('orders/',include('orders.urls')),
     path('admin/', admin.site.urls),
-    path('api/', include('rest_framework.urls')),
-    path('api/products/', include('products.urls')), # <--- Add this
-    path('api/orders/', include('orders.urls')),
-    path('api/register/', RegisterView.as_view(), name='auth_register'),
-    path('api/payments/', include('payments.urls')),
+
+    # 1. JWT AUTH (Move these to the top of the 'api' section)
     path('api/login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('api/register/', RegisterView.as_view(), name='auth_register'),
+
+    # 2. APP APIS
+    path('api/products/', include('products.urls')),
+    path('api/orders/', include('orders.urls')),
+    path('api/payments/', include('payments.urls')),
+
+    # 3. BROWSABLE API LOGIN (Keep this at the bottom)
+    path('api-auth/', include('rest_framework.urls')),
 ]
 # urlpatterns = [
 #     path('api/accounts/', include('accounts.urls')),

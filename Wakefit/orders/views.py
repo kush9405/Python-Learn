@@ -1,3 +1,4 @@
+#type:ignore
 from payments.services import initiate_uropay_order
 from rest_framework import generics, status
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
@@ -26,19 +27,27 @@ class PlaceOrderView(generics.GenericAPIView):
             items_dtos = [OrderItemDTO(product_id=vd['product_id'], quantity=vd['quantity'])]
 
         # Simple checkout data
-        checkout_data = CheckoutData(
-            user=request.user,
-            items=items_dtos,
-            address=vd['address']
-        )
+        try:
+            checkout_data = CheckoutData(
+                user=request.user,
+                items=items_dtos,
+                address=vd['address']
+            )
 
-        order, payment_data = checkout_orchestrator(checkout_data)
+            order, payment_data = checkout_orchestrator(checkout_data)
 
-        return Response({
-            "order_id": order.order_id,
-            "payment": payment_data,
-            "message": "Order Placed! Check your email for confirmation."
-        }, status=201)
+            return Response({
+                "order_id": order.order_id,
+                "payment": payment_data,
+                "message": "Order Placed! Check your email for confirmation."
+            }, status=status.HTTP_201_CREATED)
+        except ValueError as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            import logging
+            logger = logging.getLogger('orders')
+            logger.error(f"Unexpected checkout error: {e}")
+            return Response({"error": "Internal Server Error"}, status=500)
 
 
 

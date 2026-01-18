@@ -1,5 +1,9 @@
+# type:ignore
 # orders/serializers.py
+from products.serializers import ProductMinimalSerializer  # Import the new one
 from rest_framework import serializers
+
+from .models import Order, OrderItem
 
 
 class OrderItemSerializer(serializers.Serializer):
@@ -36,11 +40,6 @@ class OrderCreateSerializer(serializers.Serializer):
         return data
     
 
-# orders/serializers.py
-from products.serializers import ProductMinimalSerializer  # Import the new one
-from rest_framework import serializers
-
-from .models import Order, OrderItem
 
 
 class OrderItemReadSerializer(serializers.ModelSerializer):
