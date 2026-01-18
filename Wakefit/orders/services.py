@@ -1,3 +1,4 @@
+#type: ignore
 from asyncio.log import logger as async_logger
 from dataclasses import dataclass
 from typing import List
@@ -77,7 +78,7 @@ def checkout_orchestrator(data: CheckoutData):
     # 2. Initiate Payment (Third-party Logic)
     try:
 
-        payment_response = initiate_uropay_order(order, data.user) 
+        payment_response = initiate_uropay_order(order, data.user)
         send_order_confirmation_task.delay(order.id)
     except Exception as e:
         # Log failure but return the order (Per your requirement)
@@ -85,5 +86,3 @@ def checkout_orchestrator(data: CheckoutData):
         payment_response = None
 
     return order, payment_response
-
-

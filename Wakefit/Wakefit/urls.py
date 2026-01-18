@@ -19,10 +19,8 @@ Including another URLconf
 from accounts.views import RegisterView
 from django.contrib import admin
 from django.urls import include, path
-from orders import views
-from rest_framework_simplejwt.views import (TokenObtainPairView,
-                                            TokenRefreshView)
-
+from drf_spectacular.views import (SpectacularAPIView, SpectacularRedocView,SpectacularSwaggerView)
+from rest_framework_simplejwt.views import (TokenObtainPairView,TokenRefreshView)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -39,7 +37,13 @@ urlpatterns = [
 
     # 3. BROWSABLE API LOGIN (Keep this at the bottom)
     path('api-auth/', include('rest_framework.urls')),
+
+# 1. The Schema (The raw underlying JSON data)
+    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
+
+    # 2. Swagger UI (The interactive dashboard you want)
+    path('api/docs/swagger/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+
+    # 3. Redoc (An alternative, cleaner documentation style)
+    path('api/docs/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
 ]
-# urlpatterns = [
-#     path('api/accounts/', include('accounts.urls')),
-# ]

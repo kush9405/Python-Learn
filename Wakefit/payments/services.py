@@ -1,10 +1,10 @@
+#type:ignore
 import requests
 import logging
-from django.conf import settings
+# from django.conf import settings
 from .models import Payment
 
-import logging
-logger = logging.getLogger('payments')
+# logger = logging.getLogger('payments')
 
 logger = logging.getLogger(__name__)
 

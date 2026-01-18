@@ -1,5 +1,6 @@
 # type:ignore
 # orders/serializers.py
+from products.models import Product
 from products.serializers import ProductMinimalSerializer  # Import the new one
 from rest_framework import serializers
 
@@ -13,32 +14,33 @@ class OrderItemSerializer(serializers.Serializer):
 class OrderCreateSerializer(serializers.Serializer):
     address = serializers.CharField(
         style={'base_template': 'textarea.html'},
-        help_text="Enter your full delivery address"
+        help_text="Enter your full delivery address",
+        min_length=5, max_length=500
     )
     # vpa = serializers.CharField(label="UPI ID")
     # vpa_name = serializers.CharField(label="Name on UPI")
 
     # --- FOR THE HTML FORM (Single Item Convenience) ---
     product_id = serializers.IntegerField(required=False, write_only=True, help_text="Used for single item orders")
-    quantity = serializers.IntegerField(required=False, write_only=True, min_value=1)
+    quantity = serializers.IntegerField(required=False, write_only=True, min_value=1, max_value=25, help_text="Used for single item orders")
 
     # --- FOR THE RAW DATA (Multiple Items Support) ---
     items = OrderItemSerializer(many=True, required=False)
 
-    def validate(self, data):
-        """
-        PRD Section 11: Validation logic.
-        Ensures that if 'items' is missing, 'product_id' and 'quantity' are present.
-        """
-        items = data.get('items')
-        p_id = data.get('product_id')
-        qty = data.get('quantity')
+    def validate_product_id(self, value):
+        if not Product.objects.filter(id=value, is_active=True).exists():
+            raise serializers.ValidationError("This product is currently unavailable.")
+        return value
 
-        if not items and not (p_id and qty):
-            raise serializers.ValidationError("You must provide at least one product.")
-        
+    # 2. Logic-level validation: Can we check stock early?
+    def validate(self, data):
+        product = Product.objects.get(id=data['product_id'])
+        if product.stock_quantity < data['quantity']:
+            raise serializers.ValidationError({
+                "quantity": f"Only {product.stock_quantity} items left in stock."
+            })
         return data
-    
+
 
 
 

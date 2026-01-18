@@ -52,6 +52,8 @@ REST_FRAMEWORK = {
     'DEFAULT_FILTER_BACKENDS': (
         'django_filters.rest_framework.DjangoFilterBackend',
     ),
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+
 }
 
 # Application definition
@@ -65,16 +67,18 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django_filters',
     'rest_framework',
-    
+
     # 1. Independent Core Apps
     'accounts',
     'products',
-    
+
     # 2. Dependent Business Apps
     'orders',
     'payments',
     'notifications',
     'django_extensions',
+
+    'drf_spectacular',
 ]
 CACHES = {
     'default': {
@@ -201,7 +205,7 @@ LOG_DIR.mkdir(parents=True, exist_ok=True)
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
-    
+
     # 1. Filters: Ensure your RequestIDFilter is reachable
     'filters': {
         'request_id_filter': {
@@ -276,4 +280,15 @@ LOGGING = {
             'propagate': False,
         },
     },
+}
+
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Smart Order Processing System API',
+    'DESCRIPTION': 'Backend API for Order Management, Payments (UroPay), and Notifications.',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    # This makes the JWT 'Authorize' button appear in Swagger
+    'COMPONENT_SPLIT_PATCH': True,
+    'SECURITY': [{'BearerAuth': []}],
 }

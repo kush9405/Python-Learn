@@ -1,3 +1,4 @@
+#type:ignore
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -16,7 +17,7 @@ def uropay_webhook(request):
     """
     # 1. Log the data (Check your terminal to see the payload!)
     print(f"WEBHOOK RECEIVED: {request.data}")
-    
+
     # 2. Identify the order (UroPay sends 'merchantOrderId' back)
     order_id = request.data.get('merchantOrderId')
     status = request.data.get('status') # Assuming 'SUCCESS' or 'PAID'
@@ -40,12 +41,12 @@ def uropay_webhook(request):
 # PRD Section 15: Non-blocking Async View
 async def async_payment_status(request, transaction_id):
     """
-    Simulates checking a 3rd party API for payment status 
+    Simulates checking a 3rd party API for payment status
     without blocking the main Django thread.
     """
     # Simulate a network delay (like calling UroPay)
-    await asyncio.sleep(1) 
-    
+    await asyncio.sleep(1)
+
     return JsonResponse({
         "transaction_id": transaction_id,
         "status": "Processing",

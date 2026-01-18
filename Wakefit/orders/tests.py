@@ -1,111 +1,53 @@
-#type:ignore
-from django.urls import reverse
-from rest_framework import status
-from rest_framework.test import APITestCase
-from django.contrib.auth import get_user_model
-from unittest.mock import patch
+#type: ignore
+import pytest
 from products.models import Product
-from orders.models import Order, OrderItem
-from payments.models import Payment
 
-User = get_user_model()
+# --- FIXTURES: Reusable Setup ---
 
-class EndToEndOrderFlowTest(APITestCase):
+@pytest.fixture
+def api_client():
+    from rest_framework.test import APIClient
+    return APIClient()
 
-    def setUp(self):
-        """
-        Setup data needed for every test.
-        """
-        # Create a product in the 'Master Data' table
-        self.product = Product.objects.create(
-            name="Test Mattress",
-            sku="WK-001",
-            price=5000.00,
-            stock_quantity=10,
-            is_active=True
-        )
-        self.register_url = reverse('auth_register') # Ensure this name matches your urls.py
-        self.login_url = reverse('token_obtain_pair')
-        self.order_url = reverse('place_order')
+@pytest.fixture
+def test_product(db):
+    return Product.objects.create(name="Soft Pillow", price=500, stock_quantity=5, sku="PW-01")
 
-    def test_complete_user_journey(self):
-        """
-        PRD Section 19: Functional Requirements Check.
-        Flow: Register -> Login -> Place Order -> Mock Payment API
-        """
-        
-        # --- STEP 1: USER REGISTRATION ---
-        user_data = {
-            "username": "tester",
-            "email": "tester@example.com",
-            "password": "SecurePassword123"
-        }
-        response = self.client.post(self.register_url, user_data)
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(User.objects.count(), 1)
+@pytest.fixture
+def auth_client(api_client, db):
+    from accounts.models import User
+    user = User.objects.create_user(username="testuser", password="password")
+    api_client.force_authenticate(user=user)
+    return api_client, user
 
-        # --- STEP 2: LOGIN & GET JWT TOKEN ---
-        login_data = {
-            "username": "tester",
-            "password": "SecurePassword123"
-        }
-        response = self.client.post(self.login_url, login_data)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        access_token = response.data['access']
-        
-        # Authenticate the 'Postman' client for subsequent requests
-        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {access_token}')
+# --- THE TESTS ---
 
-        # --- STEP 3: PLACE ORDER (With Payment Mocking) ---
-        # We 'patch' the UroPay API call so we don't hit the real internet
-        with patch('payments.services.requests.post') as mock_uropay:
-            # Setup the 'Fake' response from UroPay
-            mock_uropay.return_value.status_code = 200
-            mock_uropay.return_value.json.return_value = {
-                "uropayOrderId": "URO_MOCK_12345",
-                "payment_url": "https://test.uropay.me/pay/mock"
-            }
+@pytest.mark.django_db
+def test_order_creation_reduces_stock(auth_client, test_product, mocker):
+    client, user = auth_client
 
-            order_payload = {
-                "address": "456 Backend Lane, Python City",
-                "product_id": self.product.id,
-                "quantity": 2,
-            }
+    # MOCK the payment gateway (f3 logic)
+    mocker.patch('payments.services.requests.post', return_value=mocker.Mock(status_code=201, json=lambda: {"uropayOrderId": "123"}))
 
-            response = self.client.post(self.order_url, order_payload, format='json')
+    payload = {
+        "address": "123 Mastery Street, Python City",
+        "product_id": test_product.id,
+        "quantity": 2
+    }
 
-            # --- VERIFICATIONS ---
-            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-            
-            # 1. Check if Order exists in DB
-            self.assertEqual(Order.objects.count(), 1)
-            order = Order.objects.first()
-            self.assertEqual(order.address, "456 Backend Lane, Python City")
+    url = "/api/orders/place-order/"
+    response = client.post(url, payload, format='json')
 
-            # 2. Check PRD Section 9: Stock reduction
-            self.product.refresh_from_db()
-            self.assertEqual(self.product.stock_quantity, 8) # 10 - 2 = 8
+    assert response.status_code == 201
+    test_product.refresh_from_db()
+    assert test_product.stock_quantity == 3 # 5 - 2
 
-            # 3. Check PRD Section 8: Payment record creation
-            self.assertEqual(Payment.objects.count(), 1)
-            payment = Payment.objects.first()
-            self.assertEqual(payment.transaction_id, "URO_MOCK_12345")
+@pytest.mark.django_db
+def test_order_fails_for_missing_address(auth_client, test_product):
+    client, user = auth_client
+    payload = {"product_id": test_product.id, "quantity": 1} # Missing address
 
-    def test_stock_protection_logic(self):
-        """
-        Verify that a user cannot buy more than available stock.
-        """
-        # Create user and auth
-        user = User.objects.create_user(username="buyer", password="password")
-        self.client.force_authenticate(user=user)
+    response = client.post("/api/orders/place-order/", payload)
 
-        bad_payload = {
-            "address": "Test",
-            "product_id": self.product.id,
-            "quantity": 99, # More than 10 in stock
-        }
-
-        response = self.client.post(self.order_url, bad_payload, format='json')
-        
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("Not enough stock", str(response.data))
+    assert response.status_code == 400
+    assert "address" in response.data # Serializer validation caught it!

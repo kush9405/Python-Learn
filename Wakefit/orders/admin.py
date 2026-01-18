@@ -12,7 +12,7 @@ class OrderItemInline(admin.TabularInline):
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
     # 1. Dashboard Columns
-    list_display = ('order_id', 'user', 'total_amount', 'status', 'created_at')
+    list_display = ('order_id', 'user', 'total_amount', 'status','get_payment_status', 'created_at')
     
     # 2. PRD Section 14: Sidebar Filters
     list_filter = ('status', 'created_at')
@@ -38,3 +38,10 @@ class OrderAdmin(admin.ModelAdmin):
             'fields': ('created_at', 'updated_at')
         }),
     )
+    def get_payment_status(self, obj):
+        # This reaches into the OneToOne relationship we defined
+        if hasattr(obj, 'payment'):
+            return obj.payment.status
+        return "No Payment Initiated"
+    
+    get_payment_status.short_description = 'Payment Status'

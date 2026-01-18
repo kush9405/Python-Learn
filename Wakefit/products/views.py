@@ -1,3 +1,4 @@
+#type: ignore
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from django_filters.rest_framework import DjangoFilterBackend
@@ -13,7 +14,7 @@ class ProductListAPIView(generics.ListAPIView):
     """
     PRD Section 10: REST API for Product Listing with Pagination.
     PRD Section 13: High-performance Redis Caching.
-    
+
     This view allows users to browse the catalog, search for specific
     items, and filter by price without hitting the database repeatedly.
     """
