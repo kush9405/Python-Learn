@@ -13,13 +13,13 @@ class OrderItemInline(admin.TabularInline):
 class OrderAdmin(admin.ModelAdmin):
     # 1. Dashboard Columns
     list_display = ('order_id', 'user', 'total_amount', 'status','get_payment_status', 'created_at')
-    
+
     # 2. PRD Section 14: Sidebar Filters
     list_filter = ('status', 'created_at')
-    
+
     # 3. Search Functionality
     search_fields = ('order_id', 'user__username', 'user__email', 'address')
-    
+
     # 4. Inlines: See items inside the order
     inlines = [OrderItemInline]
 
@@ -43,5 +43,5 @@ class OrderAdmin(admin.ModelAdmin):
         if hasattr(obj, 'payment'):
             return obj.payment.status
         return "No Payment Initiated"
-    
+
     get_payment_status.short_description = 'Payment Status'

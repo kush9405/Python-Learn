@@ -13,7 +13,7 @@ class Product(models.Model):
 
     def save(self, *args, **kwargs):
         # When a product is saved, clear the cache so users see fresh data
-        cache.clear() 
+        cache.clear()
         super().save(*args, **kwargs)
 
 

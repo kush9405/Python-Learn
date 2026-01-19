@@ -7,7 +7,7 @@ from rest_framework.permissions import AllowAny
 
 # App Imports
 from .models import Product
-from .serializers import ProductSerializer
+from .serializers import ProductListSerializer
 
 
 class ProductListAPIView(generics.ListAPIView):
@@ -20,7 +20,7 @@ class ProductListAPIView(generics.ListAPIView):
     """
     # 1. Data Source: Optimized query (only active products, newest first)
     queryset = Product.objects.filter(is_active=True).order_by('-created_at')
-    serializer_class = ProductSerializer
+    serializer_class = ProductListSerializer
     # 2. Permissions: Public access for the product catalog
     permission_classes = [AllowAny]
 
@@ -49,6 +49,6 @@ class ProductDetailAPIView(generics.RetrieveAPIView):
     Used when a user clicks on a specific product from the list.
     """
     queryset = Product.objects.filter(is_active=True)
-    serializer_class = ProductSerializer
+    serializer_class = ProductListSerializer
     permission_classes = [AllowAny]
     lookup_field = 'id'  # Access via /api/products/<id>/

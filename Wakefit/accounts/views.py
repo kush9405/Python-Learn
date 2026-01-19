@@ -13,5 +13,3 @@ class RegisterView(generics.CreateAPIView):
     def perform_create(self, serializer):
         user = serializer.save()
         logger.info(f"New user registered: {user.username} (ID: {user.id})")
-
-
