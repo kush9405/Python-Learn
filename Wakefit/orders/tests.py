@@ -76,22 +76,22 @@ def test_order_history_isolation(api_client, create_user):
     # 1. Setup two users using the fixture
     user_a = create_user("user_a")
     user_b = create_user("user_b")
-    
+
     # 2. Create an order specifically for User B
     Order.objects.create(user=user_b, total_amount=100.00, address="User B's House")
 
     # 3. Authenticate the client as User A (The Intruder)
     api_client.force_authenticate(user=user_a)
-    
+
     # 4. Attempt to fetch history
     url = reverse('order-history')
     response = api_client.get(url)
-    
+
     # 5. VERIFICATIONS (Plain Python Assertions)
     assert response.status_code == status.HTTP_200_OK
     # Ensure User A sees zero orders in their results
     assert len(response.data['results']) == 0
-    
+
     # --- BONUS: Verify User B CAN see their order ---
     api_client.force_authenticate(user=user_b)
     response_b = api_client.get(url)
@@ -125,7 +125,7 @@ def test_place_order_flow_success(api_client, create_user, test_product, mocker)
     # Verifications
     assert response.status_code == status.HTTP_201_CREATED
     assert Order.objects.filter(user=user).count() == 1
-    
+
     # Check PRD Section 9: Stock should be reduced
     test_product.refresh_from_db()
     assert test_product.stock_quantity == 4

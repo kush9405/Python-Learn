@@ -1,3 +1,4 @@
+#type:ignore
 """
 ASGI config for Wakefit project.
 

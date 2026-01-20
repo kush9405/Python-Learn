@@ -1,13 +1,10 @@
 #type:ignore
-from payments.services import initiate_uropay_order
 from rest_framework import generics, status
-from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.views import APIView
 
 from .models import Order
-from .serializers import (OrderCreateSerializer, OrderHistorySerializer,OrderItemSerializer)
+from .serializers import OrderCreateSerializer, OrderHistorySerializer
 from .services import CheckoutData, OrderItemDTO, checkout_orchestrator
 
 

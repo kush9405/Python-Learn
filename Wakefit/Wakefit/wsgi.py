@@ -1,3 +1,4 @@
+#type:ignore
 """
 WSGI config for Wakefit project.
 

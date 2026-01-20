@@ -1,3 +1,4 @@
+#type:ignore
 from django.urls import path
 from .views import async_payment_status, uropay_webhook
 

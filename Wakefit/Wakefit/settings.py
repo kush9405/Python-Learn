@@ -1,3 +1,4 @@
+#type:ignore
 """
 Django settings for Wakefit project.
 
@@ -13,12 +14,13 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 import os
 from pathlib import Path
 
+from decouple import config
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / '.env')
 
-def config(key, default=None):
+def config1(key, default=None):
     return os.getenv(key, default)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -29,10 +31,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = config('SECRET_KEY')
+SECRET_KEY = config1('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = config('DEBUG', 'False') == 'True'
+DEBUG = config1('DEBUG', 'False') == 'True'
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'proannexation-wavily-tamela.ngrok-free.dev']
 
@@ -53,7 +55,6 @@ REST_FRAMEWORK = {
         'django_filters.rest_framework.DjangoFilterBackend',
     ),
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
-
 }
 
 # Application definition
@@ -80,15 +81,18 @@ INSTALLED_APPS = [
 
     'drf_spectacular',
 ]
+
 CACHES = {
     'default': {
         'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': 'redis://127.0.0.1:6379/1', # Use DB 1 for Cache (Celery uses DB 0)
+        # Change hardcoded 127.0.0.1 to pull from .env or use 'redis' as fallback
+        'LOCATION': config('REDIS_URL', default='redis://redis:6379/1'),
         'OPTIONS': {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
         }
     }
 }
+
 
 # Add a default cache timeout (e.g., 15 minutes)
 CACHE_TTL = 60 * 15
@@ -130,11 +134,11 @@ WSGI_APPLICATION = 'Wakefit.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config('DB_NAME'),
-        'USER': config('DB_USER'),
-        'PASSWORD': config('DB_PASSWORD'),
-        'HOST': config('DB_HOST'),
-        'PORT': config('DB_PORT'),
+        'NAME': config1('DB_NAME'),
+        'USER': config1('DB_USER'),
+        'PASSWORD': config1('DB_PASSWORD'),
+        'HOST': config1('DB_HOST'),
+        'PORT': config1('DB_PORT'),
     }
 }
 
@@ -178,18 +182,18 @@ USE_TZ = True
 STATIC_URL = 'static/'
 
 
-UROPAY_API_KEY = config('UROPAY_API_KEY')
-UROPAY_SECRET = config('UROPAY_SECRET')
+UROPAY_API_KEY = config1('UROPAY_API_KEY')
+UROPAY_SECRET = config1('UROPAY_SECRET')
 
-CELERY_BROKER_URL = config('CELERY_BROKER_URL')
-CELERY_RESULT_BACKEND = config('CELERY_RESULT_BACKEND')
+CELERY_BROKER_URL = config('CELERY_BROKER_URL', default='redis://redis:6379/0')
+CELERY_RESULT_BACKEND = config('CELERY_RESULT_BACKEND', default='redis://redis:6379/0')
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = config('EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
+EMAIL_HOST_USER = config1('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = config1('EMAIL_HOST_PASSWORD')
 
 
 LOG_DIR = os.path.join(BASE_DIR, 'logs')

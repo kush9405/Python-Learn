@@ -1,3 +1,4 @@
+#type:ignore
 from linecache import cache
 from django.db import models
 
