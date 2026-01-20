@@ -2,7 +2,7 @@
 import logging
 from django.conf import settings
 from django.core.mail import send_mail as django_send_mail
-from Wakefit.notifications.models import Notification
+from .models import Notification
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +18,20 @@ def create_notification_record(user, order, notification_type='email'):
 
     Returns:
         Notification instance
+
+    Raises:
+        ValueError: If user or order is None/invalid
     """
+    # Validate inputs before creating
+    if not user:
+        raise ValueError("User object cannot be None")
+    if not order:
+        raise ValueError("Order object cannot be None")
+    if not hasattr(user, 'email') or not user.email:
+        raise ValueError("User must have a valid email address")
+    if not hasattr(order, 'order_id'):
+        raise ValueError("Order must have an order_id")
+
     return Notification.objects.create(
         user=user,
         order=order,

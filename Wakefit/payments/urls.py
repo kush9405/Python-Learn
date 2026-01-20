@@ -1,8 +1,8 @@
 #type:ignore
 from django.urls import path
-from .views import async_payment_status, uropay_webhook
+from .views import PaymentStatusView, UroPayWebhookView
 
 urlpatterns = [
-    path('webhook/', uropay_webhook, name='uropay_webhook'),
-    path('status/<str:transaction_id>/', async_payment_status, name='async_payment_status'),
+    path('webhook/', UroPayWebhookView.as_view(), name='uropay_webhook'),
+    path('status/<str:transaction_id>/', PaymentStatusView.as_view(), name='payment_status'),
 ]
